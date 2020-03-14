@@ -1,26 +1,26 @@
 #include <Arduino.h>
-#include <ArduinoOTA.h>
 #include <ESP8266WiFi.h>
-#include <ESP8266WiFiMulti.h>
 #include <ESP8266mDNS.h>
 #include <WiFiClient.h>
 #include <PubSubClient.h>
+#include <Esp.h>
 
-ESP8266WiFiMulti wifiMulti;
 WiFiClient espClient;
 PubSubClient client(espClient);
 
-const char *mqtt_server = "192.168.1.2";
+const char *mqtt_server = "192.168.4.1";
 String hostname = "WindSensor";
 
 // void callback(char *topic, byte *payload, int length);
-void startOTA();
 void monitorMQTT();
 void monitorWiFi();
 void startmDNS();
 unsigned int getWindDirection();
 void ICACHE_RAM_ATTR windSpeedInterrupt();
 void sendWindInfo(unsigned long time);
+
+#define NB_TRYWIFI      10
+#define SLEEP_DURATION  60 * 1e6
 
 unsigned int windSpeed = 0;
 unsigned int windDirection = 0;
@@ -36,22 +36,41 @@ void setup() {
   Serial.setDebugOutput(true);
 
   WiFi.hostname(hostname);
-  startOTA();
 
-  wifiMulti.addAP("QuasimodoHomeWiFi", "K1MI9391park0ur");
-  wifiMulti.addAP("GioFi", "danzapk1");
+  WiFi.begin("MètisDataNet", "metis2020");
+
+  Serial.print("Connecting");
+  int _try = 0;
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    delay(500);
+    _try++;
+    Serial.print(".");
+    if ( _try >= NB_TRYWIFI ) {
+        Serial.println("Impossible to connect WiFi network, going to deep sleep");
+        ESP.deepSleep(SLEEP_DURATION);
+    }
+  }
+  Serial.println();
+
+  startmDNS();
 
   client.setServer(mqtt_server, 1883);
 }
 
 void loop() {
-  monitorWiFi();
   monitorMQTT();
-  ArduinoOTA.handle();
   unsigned long now = millis();
+
   if (now - lastMsg > 100){
-    windDirection = getWindDirection();
+    //windDirection = getWindDirection();
     sendWindInfo(now);
+    lastMsg = now;
+  }
+
+  if (WiFi.status() != WL_CONNECTED){
+    Serial.println("Lost Connection to WiFi, going to deep sleep");
+    ESP.deepSleep(SLEEP_DURATION);
   }
 }
 
@@ -62,50 +81,6 @@ void startmDNS() {
         Serial.println("Error setting up MDNS responder!");
     }
     Serial.println("mDNS responder started");
-}
-
-void startOTA() {
-    ArduinoOTA.setHostname(hostname.c_str());
-    ArduinoOTA.setPassword("esp8266");
-
-    ArduinoOTA.onStart([]() {
-        Serial.println("Start");
-    });
-    ArduinoOTA.onEnd([]() {
-        Serial.println("\nEnd");
-    });
-    ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-        Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
-    });
-    ArduinoOTA.onError([](ota_error_t error) {
-        Serial.printf("Error[%u]: ", error);
-        if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
-        else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
-        else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
-        else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
-        else if (error == OTA_END_ERROR) Serial.println("End Failed");
-    });
-    ArduinoOTA.begin();
-    Serial.println("OTA ready");
-}
-
-void monitorWiFi() {
-  if (wifiMulti.run() != WL_CONNECTED)
-  {
-    if (connectionWasAlive == true)
-    {
-      connectionWasAlive = false;
-      Serial.print("Looking for WiFi ");
-    }
-    Serial.print(".");
-    delay(500);
-  }
-  else if (connectionWasAlive == false)
-  {
-    connectionWasAlive = true;
-    Serial.printf(" connected to %s\n", WiFi.SSID().c_str());
-    startmDNS();
-  }
 }
 
 void monitorMQTT() {
@@ -150,9 +125,14 @@ void sendWindInfo(unsigned long time) {
   client.publish("WindInfo", msg);
 }
 
+// 1000ms == 1.29kn == 2.4km/h
 unsigned long lastSpd = 0;
 void ICACHE_RAM_ATTR windSpeedInterrupt() {
   unsigned long spd = millis();
-  windSpeed = spd - lastSpd;
-  lastSpd = spd;
+  if (spd - lastSpd >= 10)
+  {
+    windSpeed = spd - lastSpd;
+    lastSpd = spd;
+  }
 }
+
