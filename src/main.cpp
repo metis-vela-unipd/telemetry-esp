@@ -5,16 +5,17 @@
 #include <PubSubClient.h>
 #include <Esp.h>
 
-#define NB_TRYWIFI      10
-#define SLEEP_DURATION  60 * 1e6
+#define NB_TRYWIFI      10        //number of wifi connection tries before going to sleep
+#define SLEEP_DURATION  60 * 1e6  //sleep duration [us]
 
-#define SSID "MètisDataNet"
+#define SSID "MètisDataNet"       //WiFi credentials
 #define PSW  "metis2020"
+#define MQTT_SERVER_IP  "192.168.4.1"
 
 WiFiClient espClient;
 PubSubClient client(espClient);
 
-#ifdef SENSOR_WIND
+#ifdef SENSOR_WIND                //Sensor selection defines, selected in environment
   #include <windSensor.h>
   windSensor sens(client);
 #endif
@@ -31,8 +32,6 @@ PubSubClient client(espClient);
  #define HOSTNAME "SensorUnknown"
 #endif
 
-const char *mqtt_server = "192.168.4.1";
-
 // void callback(char *topic, byte *payload, int length);
 void monitorMQTT();
 void monitorWiFi();
@@ -42,10 +41,11 @@ void setup() {
   Serial.begin(9600);
   //Serial.setDebugOutput(true);
 
+  //WiFi setup, with hostnale
   WiFi.hostname(HOSTNAME);
-
   WiFi.begin(SSID, PSW);
 
+  // Try to connect, if unable go to sleep
   Serial.print("Connecting");
   int _try = 0;
   while (WiFi.status() != WL_CONNECTED)
@@ -60,25 +60,27 @@ void setup() {
   }
   Serial.println();
 
+  // DNS setup
   startmDNS();
 
-  client.setServer(mqtt_server, 1883);
+  //mQTT server setup
+  client.setServer(MQTT_SERVER_IP, 1883);
 
+  //sensor setup
   sens.setup();
 }
 
 void loop() {
+  //mQtt and sensor loops
   monitorMQTT();
-  
   sens.loop();
 
+  // if we are not connected to WiFi anymore go to sleep
   if (WiFi.status() != WL_CONNECTED){
     Serial.println("Lost Connection to WiFi, going to deep sleep, goodnight!");
     ESP.deepSleep(SLEEP_DURATION);
   }
 }
-
-boolean connectionWasAlive = true;
 
 void startmDNS() {
     if (!MDNS.begin(HOSTNAME)) {             // Start the mDNS responder
