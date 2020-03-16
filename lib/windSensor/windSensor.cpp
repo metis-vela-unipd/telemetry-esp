@@ -1,17 +1,17 @@
 #include <windSensor.h>
 
-//Initialization of static variables needed for the interrupt routine
+// Initialization of static variables needed for the interrupt routine
 unsigned int windSensor::windSpeed = 0;
 unsigned long windSensor::lastSpd = 0;
 
-//Setup method, to be called in the setup call
+// Setup method, to be called in the setup call
 void windSensor::setup() {
   pinMode(A0, INPUT);
   pinMode(D5, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(D5), windSpeedInterrupt, RISING);
 }
 
-//Loop method to be called on each loop
+// Loop method to be called on each loop
 void windSensor::loop() {
   unsigned long now = millis();
   if (now - this->lastMsg > SENSOR_UPDATE_INTERVAL){
@@ -20,7 +20,7 @@ void windSensor::loop() {
   }
 }
 
-//Interrupt function to read the wind speed
+// Interrupt function to read the wind speed
 void ICACHE_RAM_ATTR windSensor::windSpeedInterrupt() {
   unsigned long spd = millis();
   if (spd - lastSpd >= 10)
@@ -30,7 +30,7 @@ void ICACHE_RAM_ATTR windSensor::windSpeedInterrupt() {
   }
 }
 
-//Wind direction function
+// Wind direction function
 unsigned int windSensor::getWindDirection() {
   unsigned int dir;
   dir = analogRead(A0);

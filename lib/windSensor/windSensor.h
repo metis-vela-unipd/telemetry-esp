@@ -3,7 +3,6 @@
 #define HOSTNAME "WindSensor"
 #define MSG_BUFFER_SIZE 50
 
-// 1000ms == 1.29kn == 2.4km/h
 /*
 Wind sensor class, this implements the interrupts and the logic to read the wind sensors.
 */

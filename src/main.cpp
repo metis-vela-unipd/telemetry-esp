@@ -5,17 +5,17 @@
 #include <PubSubClient.h>
 #include <Esp.h>
 
-#define NB_TRYWIFI      10        //number of wifi connection tries before going to sleep
-#define SLEEP_DURATION  60 * 1e6  //sleep duration [us]
+#define NB_TRYWIFI      10        // Number of wifi connection tries before going to sleep
+#define SLEEP_DURATION  60 * 1e6  // Sleep duration [us]
 
-#define SSID "MètisDataNet"       //WiFi credentials
+#define SSID "MètisDataNet"       // WiFi credentials
 #define PSW  "metis2020"
 #define MQTT_SERVER_IP  "192.168.4.1"
 
 WiFiClient espClient;
 PubSubClient client(espClient);
 
-#ifdef SENSOR_WIND                //Sensor selection defines, selected in environment
+#ifdef SENSOR_WIND                // Sensor selection defines, selected in environment
   #include <windSensor.h>
   windSensor sens(client);
 #endif
@@ -63,19 +63,19 @@ void setup() {
   // DNS setup
   startmDNS();
 
-  //mQTT server setup
+  // mQTT server setup
   client.setServer(MQTT_SERVER_IP, 1883);
 
-  //sensor setup
+  // Sensor setup
   sens.setup();
 }
 
 void loop() {
-  //mQtt and sensor loops
+  // mQtt and sensor loops
   monitorMQTT();
   sens.loop();
 
-  // if we are not connected to WiFi anymore go to sleep
+  // If we are not connected to WiFi anymore go to sleep
   if (WiFi.status() != WL_CONNECTED){
     Serial.println("Lost Connection to WiFi, going to deep sleep, goodnight!");
     ESP.deepSleep(SLEEP_DURATION);
