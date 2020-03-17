@@ -1,7 +1,6 @@
 #include <sensor.h>
 
 #define HOSTNAME "WindSensor"
-#define MSG_BUFFER_SIZE 50
 
 /*
 Wind sensor class, this implements the interrupts and the logic to read the wind sensors.
@@ -10,14 +9,13 @@ Wind sensor class, this implements the interrupts and the logic to read the wind
 class windSensor : public sensor
 {
 private:  
-    unsigned long lastMsg = 0;
     unsigned int windDirection = 0;
     static unsigned long lastSpd;
     static unsigned int windSpeed;
 public:
     using sensor::sensor;
     void setup();
-    void loop();
+    void action();
 
     unsigned int getWindDirection();
     static void ICACHE_RAM_ATTR windSpeedInterrupt();
