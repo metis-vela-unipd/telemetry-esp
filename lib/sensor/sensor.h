@@ -18,10 +18,10 @@ public:
 
     sensor(PubSubClient client);
 
-    void setup(){};
-    void loop(){};
+    void setup();
+    void loop();
 
     // Virtual methods that will be defined in each different sensor
-    virtual void action();
+    virtual void action(){};
     virtual void sendData(unsigned long time){};
 };
