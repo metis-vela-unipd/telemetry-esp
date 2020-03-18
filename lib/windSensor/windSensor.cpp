@@ -2,30 +2,53 @@
 
 // Initialization of static variables needed for the interrupt routine
 unsigned int windSensor::windSpeed = 0;
-unsigned long windSensor::lastSpd = 0;
+unsigned long windSensor::lastSpeed = 0;
 
 // Setup method, to be called in the setup call
 void windSensor::setup()
 {
+    sensor::setup();
+
+    #ifdef DEBUG
+        Serial.println("Started Sensor setup");
+    #endif
+
     pinMode(A0, INPUT);
     pinMode(D5, INPUT_PULLUP);
     attachInterrupt(digitalPinToInterrupt(D5), windSpeedInterrupt, RISING);
+
+    #ifdef DEBUG
+        Serial.println("Assign struct names:");
+    #endif
+
+    this->dataArray[0].topic += "direction";
+    this->dataArray[1].topic += "speed";
+
+    #ifdef DEBUG
+        Serial.println("Finished Sensor Setup");
+    #endif
+}
+
+char* windSensor::getTopic()
+{
+    return "wind/";
 }
 
 // Loop method to be called on each loop
 void windSensor::action()
 {
-    this->windDirection = this->getWindDirection();
+    this->dataArray[0].value = getWindDirection();
+    this->dataArray[1].value = this->windSpeed;
 }
 
 // Interrupt function to read the wind speed
 void ICACHE_RAM_ATTR windSensor::windSpeedInterrupt()
 {
     unsigned long spd = millis();
-    if (spd - lastSpd >= 10)
+    if (spd - lastSpeed >= 10)
     {
-        windSpeed = spd - lastSpd;
-        lastSpd = spd;
+        windSpeed = spd - lastSpeed;
+        lastSpeed = spd;
     }
 }
 
@@ -35,11 +58,4 @@ unsigned int windSensor::getWindDirection()
     unsigned int dir;
     dir = analogRead(A0);
     return dir;
-}
-
-void windSensor::sendData(unsigned long time)
-{
-    char msg[MSG_BUFFER_SIZE];
-    snprintf(msg, MSG_BUFFER_SIZE, "%1d, %1d, %1ld", windSpeed, windDirection, time);
-    this->client.publish("WindInfo", msg);
 }

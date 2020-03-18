@@ -2,6 +2,10 @@
 
 #define HOSTNAME "WindSensor"
 
+#define SENSOR_DATA_N 2
+
+#define SENSOR_TOPIC_NAME "wind/"
+
 /*
 Wind sensor class, this implements the interrupts and the logic to read the wind sensors.
 */
@@ -9,13 +13,13 @@ Wind sensor class, this implements the interrupts and the logic to read the wind
 class windSensor : public sensor
 {
 private:  
-    unsigned int windDirection = 0;
-    static unsigned long lastSpd;
+    static unsigned long lastSpeed;
     static unsigned int windSpeed;
 public:
     using sensor::sensor;
     void setup();
     void action();
+    char* getTopic();
 
     unsigned int getWindDirection();
     static void ICACHE_RAM_ATTR windSpeedInterrupt();

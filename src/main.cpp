@@ -5,12 +5,20 @@
 #include <PubSubClient.h>
 #include <Esp.h>
 
+#ifdef DEBUG
+    #include <GDBStub.h>
+#endif
+
 #define NB_TRYWIFI 10           // Number of wifi connection tries before going to sleep
 #define SLEEP_DURATION 60 * 1e6 // Sleep duration [us]
 
-#define SSID "MètisDataNet" // WiFi credentials
-#define PSW "metis2020"
-#define MQTT_SERVER_IP "192.168.4.1"
+// #define SSID "MètisDataNet" // WiFi credentials
+// #define PSW "metis2020"
+
+#define SSID "QuasimodoHomeWiFi"
+#define PSW "K1MI9391park0ur"
+
+#define MQTT_SERVER_IP "192.168.1.2"
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -39,8 +47,11 @@ void startmDNS();
 
 void setup()
 {
-    Serial.begin(9600);
-    //Serial.setDebugOutput(true);
+    Serial.begin(115200);
+    #ifdef DEBUG
+        Serial.setDebugOutput(true);
+        gdbstub_init();
+    #endif
 
     //WiFi setup, with hostnale
     WiFi.hostname(HOSTNAME);
