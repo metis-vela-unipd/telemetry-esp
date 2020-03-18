@@ -12,11 +12,9 @@
 #define NB_TRYWIFI 10           // Number of wifi connection tries before going to sleep
 #define SLEEP_DURATION 60 * 1e6 // Sleep duration [us]
 
-// #define SSID "MètisDataNet" // WiFi credentials
-// #define PSW "metis2020"
+#define SSID "MètisDataNet" // WiFi credentials
+#define PSW "metis2020"
 
-#define SSID "QuasimodoHomeWiFi"
-#define PSW "K1MI9391park0ur"
 
 #define MQTT_SERVER_IP "192.168.1.2"
 
