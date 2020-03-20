@@ -6,7 +6,7 @@
 #include <Esp.h>
 
 #ifdef DEBUG
-    #include <GDBStub.h>
+#include <GDBStub.h>
 #endif
 
 #define NB_TRYWIFI 10           // Number of wifi connection tries before going to sleep
@@ -15,8 +15,7 @@
 #define SSID "MètisDataNet" // WiFi credentials
 #define PSW "metis2020"
 
-
-#define MQTT_SERVER_IP "192.168.1.2"
+#define MQTT_SERVER_IP "192.168.4.1"
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -77,6 +76,7 @@ void setup()
     // mQTT server setup
     client.setServer(MQTT_SERVER_IP, 1883);
 
+    Serial.println("entering in sensor setup now");
     // Sensor setup
     sens.setup();
 }

@@ -4,11 +4,7 @@
 /*
 General sensor class, just a template for all sensor types 
 */
-
-#define SENSOR_UPDATE_INTERVAL 100 //ms
 #define MSG_BUFFER_SIZE 50
-
-#define SENSOR_DATA_N 2
 
 #define MQTT_TOPIC "sensor/"
 
@@ -16,9 +12,8 @@ General sensor class, just a template for all sensor types
 struct sensorData
 {
     String topic;
-    unsigned int value;    
+    unsigned int value;
 };
-
 
 class sensor
 {
@@ -26,7 +21,7 @@ private:
     PubSubClient client;
     unsigned long lastMsgTime = 0;
 public:
-    sensorData dataArray[SENSOR_DATA_N];
+    sensorData* dataArray;
 
     sensor(PubSubClient client);
 
@@ -34,8 +29,10 @@ public:
     void loop();
     void sendData(unsigned long time);
 
-
     // Virtual methods that will be defined in each different sensor
-    virtual char* getTopic(){ return ""; };
-    virtual void action(){};
+    virtual char *getTopic() = 0;
+    virtual void action() = 0;
+
+    virtual int get_data_n() = 0;
+    virtual int get_sensor_update_interval() = 0;
 };

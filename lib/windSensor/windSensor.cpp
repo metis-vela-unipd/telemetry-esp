@@ -4,34 +4,41 @@
 unsigned int windSensor::windSpeed = 0;
 unsigned long windSensor::lastSpeed = 0;
 
+windSensor::windSensor(PubSubClient client)
+: sensor(client)
+{
+    this->dataArray = new sensorData[this->get_data_n()];
+}
+
+
 // Setup method, to be called in the setup call
 void windSensor::setup()
 {
     sensor::setup();
 
-    #ifdef DEBUG
-        Serial.println("Started Sensor setup");
-    #endif
+#ifdef DEBUG
+    Serial.println("Started Sensor setup");
+#endif
 
     pinMode(A0, INPUT);
     pinMode(D5, INPUT_PULLUP);
     attachInterrupt(digitalPinToInterrupt(D5), windSpeedInterrupt, RISING);
 
-    #ifdef DEBUG
-        Serial.println("Assign struct names:");
-    #endif
+#ifdef DEBUG
+    Serial.println("Assign struct names:");
+#endif
 
     this->dataArray[0].topic += "direction";
     this->dataArray[1].topic += "speed";
 
-    #ifdef DEBUG
-        Serial.println("Finished Sensor Setup");
-    #endif
+#ifdef DEBUG
+    Serial.println("Finished Sensor Setup");
+#endif
 }
 
-char* windSensor::getTopic()
+char *windSensor::getTopic()
 {
-    return "wind/";
+    return SENSOR_TOPIC_NAME;
 }
 
 // Loop method to be called on each loop
