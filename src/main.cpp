@@ -4,6 +4,8 @@
 #include <WiFiClient.h>
 #include <PubSubClient.h>
 #include <Esp.h>
+#include <WiFiUdp.h>
+#include <ArduinoOTA.h>
 
 #ifdef DEBUG
 #include <GDBStub.h>
@@ -12,43 +14,44 @@
 #define NB_TRYWIFI 10           // Number of wifi connection tries before going to sleep
 #define SLEEP_DURATION 60 * 1e6 // Sleep duration [us]
 
-#define SSID "MètisDataNet" // WiFi credentials
+#define SSID "MetisDataNet" // WiFi credentials
 #define PSW "metis2020"
 
-#define MQTT_SERVER_IP "192.168.4.1"
+#define MQTT_SERVER_IP "telemetry-ap.wlan"
 
 WiFiClient espClient;
 PubSubClient client(espClient);
 
 #ifdef SENSOR_WIND // Sensor selection defines, selected in environment
-    #include <windSensor.h>
-    windSensor sens(client);
+#include <windSensor.h>
+windSensor sens(client);
 #endif
 #ifdef SENSOR_ACCEL
-    #include <accelSensor.h>
-    accelSensor sens(client);
+#include <accelSensor.h>
+accelSensor sens(client);
 #endif
 #ifdef SENSOR_STRAIN
-    #include <strainSensor.h>
-    strainSensor sens(client);
+#include <strainSensor.h>
+strainSensor sens(client);
 #endif
 
 #ifndef HOSTNAME
-    #define HOSTNAME "SensorUnknown"
+#define HOSTNAME "SensorUnknown"
 #endif
 
 // void callback(char *topic, byte *payload, int length);
 void monitorMQTT();
 void monitorWiFi();
 void startmDNS();
+void startOTA();
 
 void setup()
 {
     Serial.begin(115200);
-    #ifdef DEBUG
-        Serial.setDebugOutput(true);
-        gdbstub_init();
-    #endif
+#ifdef DEBUG
+    Serial.setDebugOutput(true);
+    gdbstub_init();
+#endif
 
     //WiFi setup, with hostnale
     WiFi.hostname(HOSTNAME);
@@ -73,6 +76,9 @@ void setup()
     // DNS setup
     startmDNS();
 
+    // OTA setup
+    startOTA();
+
     // mQTT server setup
     client.setServer(MQTT_SERVER_IP, 1883);
 
@@ -84,6 +90,7 @@ void setup()
 void loop()
 {
     // mQtt and sensor loops
+    ArduinoOTA.handle();
     monitorMQTT();
     sens.loop();
 
@@ -127,4 +134,32 @@ void monitorMQTT()
     {
         client.loop();
     }
+}
+
+void startOTA()
+{
+    ArduinoOTA.onStart([]() {
+        Serial.println("Start");
+    });
+    ArduinoOTA.onEnd([]() {
+        Serial.println("\nEnd");
+    });
+    ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+        Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+    });
+    ArduinoOTA.onError([](ota_error_t error) {
+        Serial.printf("Error[%u]: ", error);
+        if (error == OTA_AUTH_ERROR)
+            Serial.println("Auth Failed");
+        else if (error == OTA_BEGIN_ERROR)
+            Serial.println("Begin Failed");
+        else if (error == OTA_CONNECT_ERROR)
+            Serial.println("Connect Failed");
+        else if (error == OTA_RECEIVE_ERROR)
+            Serial.println("Receive Failed");
+        else if (error == OTA_END_ERROR)
+            Serial.println("End Failed");
+    });
+    ArduinoOTA.setHostname(HOSTNAME);
+    ArduinoOTA.begin();
 }

@@ -4,6 +4,8 @@
 
 #define SENSOR_TOPIC_NAME "wind/"
 
+#define SPEED_CONVERSION_CONSTANT 4444.8
+
 /*
 Wind sensor class, this implements the interrupts and the logic to read the wind sensors.
 */
