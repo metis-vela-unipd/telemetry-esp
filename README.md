@@ -1,3 +1,6 @@
+### ⚠️ Archived repository
+The Telemetry project is now moved into the SailTrack project, please refer to [sailtrack-documentation](https://github.com/metis-vela-unipd/sailtrack-documentation).
+
 # telemetry-esp
 
 Repository for the code on the ESP-8266 responsible to interface with the various sensors:
